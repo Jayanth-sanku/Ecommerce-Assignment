@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Product Catalog</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/cart">Cart</a>
+            <a href="/orders">Orders</a>
+        </nav>
+    </header>
+    <main id="catalog-content">
+        <!-- Products will be loaded here -->
+    </main>
+    <script src="{% static 'js/catalog.js' %}"></script>
+</body>
+</html>

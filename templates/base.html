@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{% csrf_token %}">
+  <title>Home</title>
+  <!-- Bootstrap CSS -->
+  <link
+    rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+  />
+  <style>
+    /* Style for product cards */
+    .product-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .product-card img {
+      max-height: 200px; /* Adjust as needed */
+      object-fit: cover;
+    }
+
+    .product-card .card-body {
+      flex: 1; /* Ensures the body takes up available space */
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .product-card .card-title,
+    .product-card .card-text {
+      margin-bottom: 10px;
+    }
+
+    .product-card .btn {
+      margin-top: auto; /* Pushes button to the bottom of the card */
+    }
+
+    .card {
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="#">Alazka Store</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/api/catalog/">Catalog</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'cart_page' %}">
+              Cart (<span id="cart-count">0</span>)
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/orders/">Orders</a>
+          </li>
+          <li class="nav-item">
+            {% if user.is_authenticated %}
+            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+            {% else %}
+            <a class="nav-link" href="{% url 'authentication:login' %}">Login</a>
+            {% endif %}
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content container" style="padding-top: 70px">
+    <div id="product-list" class="row">
+      <!-- Products will be loaded here -->
+    </div>
+  </main>
+
+  <!-- Bootstrap JS, Popper.js, and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+  <script>
+    function getCSRFToken() {
+      return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      function updateCartCount() {
+        fetch("{% url 'cart_detail' %}")
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              console.error("Failed to fetch cart count:", response.statusText);
+              return { cart_count: 0 }; // Fallback to 0 if there's an error
+            }
+          })
+          .then(data => {
+            document.getElementById("cart-count").textContent = data.cart_count || 0;
+          })
+          .catch(error => console.error("Error fetching cart count:", error));
+      }
+
+      fetch("/api/catalog/products/")
+        .then(response => response.json())
+        .then(data => {
+          const productList = document.getElementById("product-list");
+          productList.innerHTML = ""; // Clear the product list
+
+          data.forEach(product => {
+            const productCard = `
+              <div class="col-md-3 mb-4">
+                <div class="card product-card">
+                  ${product.image ? `<img src="${product.image}" class="card-img-top product-img" alt="${product.name}">` : ""}
+                  <div class="card-body">
+                    <h5 class="card-title">${product.name}</h5>
+                    <p class="card-text">${product.description}</p>
+                    <p class="card-text"><strong>$${product.price}</strong></p>
+                    <button class="btn btn-primary add-to-cart" data-product-id="${product.id}">Add to Cart</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            productList.innerHTML += productCard;
+          });
+
+          document.querySelectorAll(".add-to-cart").forEach(button => {
+            button.addEventListener("click", function (event) {
+              event.preventDefault();
+              const productId = this.getAttribute("data-product-id");
+
+              fetch("{% url 'cart_item_add' %}", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "X-CSRFToken": getCSRFToken()
+                },
+                body: new URLSearchParams({
+                  product_id: productId,
+                  quantity: 1
+                })
+              })
+                .then(response => {
+                  if (response.ok) {
+                    // If successful, update cart count
+                    updateCartCount();
+                  } else {
+                    return response.text().then(text => {
+                      throw new Error(text || 'Error adding to cart');
+                    });
+                  }
+                })
+                .catch(error => console.error("Error adding to cart:", error));
+            });
+          });
+        })
+        .catch(error => console.error("Error fetching products:", error));
+    });
+  </script>
+</body>
+</html>

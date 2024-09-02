@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .card {
+            margin-bottom: 20px;
+        }
+
+        .product-form,
+        .order-list {
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            width: 100px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .btn-add-product {
+            margin-bottom: 20px;
+        }
+
+        .card-header h5 {
+            margin: 0;
+        }
+
+        .order-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+
+        .order-item img {
+            max-width: 100px;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header fixed-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="/">Admin Dashboard</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container" style="padding-top: 70px;">
+        <!-- Product Management -->
+        <div class="product-management">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Product Management</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'admin_add_product' %}" class="btn btn-success btn-add-product">Add New Product</a>
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Product List</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Price</th>
+                                        <th>Image</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products %}
+                                    <tr>
+                                        <td>{{ product.name }}</td>
+                                        <td>{{ product.description }}</td>
+                                        <td>${{ product.price }}</td>
+                                        <td>
+                                            {% if product.image %}
+                                            <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                                style="height: 50px;">
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'admin_edit_product' product.id %}"
+                                                class="btn btn-warning btn-sm action-btn">Edit</a>
+                                            <a href="{% url 'admin_delete_product' product.id %}"
+                                                class="btn btn-danger btn-sm action-btn">Delete</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order List -->
+            <div class="order-list">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Order List</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if orders %}
+                            {% for order in orders %}
+                                <div class="order-item">
+                                    <div>
+                                        <h6>Order ID: {{ order.id }}</h6>
+                                        <p><strong>User:</strong> {{ order.user.username }}</p>
+                                    </div>
+                                    <div>
+                                        <h6>Items:</h6>
+                                        {% for item in order.items.all %}
+                                            <div class="order-item">
+                                                {% if item.product.image %}
+                                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                                {% else %}
+                                                    {% comment %} <img src="{% static 'default_image.jpg' %}" alt="Default Image"> {% endcomment %}
+                                                {% endif %}
+                                                <p><strong>Product Name:</strong> {{ item.product.name }}</p>
+                                            </div>
+                                        {% empty %}
+                                            <p>No items for this order.</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No orders available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-image {
+            width: 75px;
+            height: 75px;
+            object-fit: cover;
+        }
+        .product-table th, .product-table td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Your Cart</h1>
+        
+        {% if cart_items %}
+            <table class="table table-striped product-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Product</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td><img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image"></td>
+                        <td>{{ item.product.name }}</td>
+                        <td>
+                            <button 
+                                class="btn btn-danger btn-sm remove-item"
+                                data-url="{% url 'cart_item_delete' item.pk %}">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="d-flex justify-content-end">
+                <h4>Total Price: ${{ cart.total_price }}</h4>
+            </div>
+        {% else %}
+            <p>Your cart is empty.</p>
+        {% endif %}
+        
+        <div class="d-flex justify-content-between mt-3">
+            <a href="/" class="btn btn-primary">Continue Shopping</a>
+            <a href="{% url 'checkout' %}" class="btn btn-primary">Proceed to Checkout</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.remove-item').on('click', function() {
+                const button = $(this);
+                const url = button.data('url');
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        button.closest('tr').remove();  
+                        if ($('#cart-items tbody tr').length === 0) {
+                           
+                            $('#cart-items').html('<p>Your cart is empty.</p>');
+                        }
+                        alert(response.message);  
+                    },
+                    error: function() {
+                        alert('Error removing item.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
